@@ -6,6 +6,7 @@ This is a toy implementation with security vulnerabilities; it is unsuitable for
 # References:
 
 FIPS 197 (AES specification): [https://csrc.nist.gov/csrc/media/publications/fips/197/final/documents/fips-197.pdf]  
+Rijndael S-box [https://en.wikipedia.org/wiki/Rijndael_S-box]
 Notes on implementing AES in go: [http://blog.nindalf.com/implementing-aes/]  
 X86_64 tutorial: [http://0xax.blogspot.com/2014/08/say-hello-to-x64-assembly-part-1.html]  
 NASM assembler reference: [http://www.nasm.us/xdoc/2.13.01/html/nasmdoc0.html]  

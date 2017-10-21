@@ -12,7 +12,7 @@ NASM assembler reference: [http://www.nasm.us/xdoc/2.13.01/html/nasmdoc0.html]
 GNU emacs NASM mode: [https://github.com/skeeto/nasm-mode]  
 
 In `~/.emacs`:  
-`(load "~/src/nasm-mode/nasm-mode.el")  
-(require 'nasm-mode)  
-(add-to-list 'auto-mode-alist '("\\.\\(asm\\|s\\)$" . nasm-mode))`  
+`(load "~/src/nasm-mode/nasm-mode.el")`  
+`(require 'nasm-mode)`  
+`(add-to-list 'auto-mode-alist '("\\.\\(asm\\|s\\)$" . nasm-mode))`  
 

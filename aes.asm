@@ -28,7 +28,7 @@ section .data
 	db 0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF
 	db 0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
 
-	inv_sbox db     0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB
+	inv_sbox db 0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB
 	db 0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB
 	db 0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D, 0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E
 	db 0x08, 0x2E, 0xA1, 0x66, 0x28, 0xD9, 0x24, 0xB2, 0x76, 0x5B, 0xA2, 0x49, 0x6D, 0x8B, 0xD1, 0x25
@@ -58,15 +58,46 @@ loopy:
 
 	call inptostate
 
+	mov [pbyte], byte 'I'
+	call printchar
 	mov rax, input
 	call printary16
 	call newline
+	mov [pbyte], byte 'S'
+	call printchar
+	mov rax, State
+	call printary16
+	call newline
+
+;	call subbytes
+;	mov rax, State
+;	call printary16
+;	call newline
+
+;	call invsubbytes	; test subbytes/invsubbytes
+;	mov rax, State
+;	call printary16
+;	call newline
+
+
+	mov [pbyte], byte 'A'
+	call printchar
+	call shiftrows
+	mov rax, State
+	call printary16
+	call newline
+
+	mov [pbyte], byte 'B'
+	call printchar
+	call invshiftrows
 	mov rax, State
 	call printary16
 	call newline
 
 	; XXX
 
+	mov [pbyte], byte 'O'
+	call printchar
 	call statetoout
 	mov rax, output
 	call printary16
@@ -79,7 +110,27 @@ loopy:
 
 ;; FIPS 197 Section 5.1.1
 subbytes:
+	xor rdi, rdi
+subbytesloop:
+	mov al, [State + rdi]
+	mov cl, [sbox + rax]
+	mov [State + rdi], cl
+	inc rdi
+	cmp rdi, blocklen
+	jne subbytesloop
+	ret
 
+;; FIPS 197 Section 5.1.1
+invsubbytes:
+	xor rdi, rdi
+invsubbytesloop:
+	mov al, [State + rdi]
+	mov cl, [inv_sbox + rax]
+	mov [State + rdi], cl
+	inc rdi
+	cmp rdi, blocklen
+	jne invsubbytesloop
+	ret
 	
 ;;--------------------------------------------------------------------------------
 
@@ -115,6 +166,33 @@ statetooutloop:
 	jne statetooutloop2
 	ret
 	
+;;--------------------------------------------------------------------------------
+
+;; FIPS 197 Section 5.1.2
+shiftrows:
+	mov eax, [State + Nb]	; row 1
+	rol eax, 8
+	mov [State + Nb], eax
+	mov eax, [State + 2*Nb]	; row 2
+	rol eax, 16
+	mov [State + 2*Nb], eax
+	mov eax, [State + 3*Nb]	; row 3
+	rol eax, 24
+	mov [State + 3*Nb], eax
+	ret
+
+invshiftrows:
+	mov eax, [State + Nb]	; row 1
+	ror eax, 8
+	mov [State + Nb], eax
+	mov eax, [State + 2*Nb] ; row 2
+	ror eax, 16
+	mov [State + 2*Nb], eax
+	mov eax, [State + 3*Nb]	; row 3
+	ror eax, 24
+	mov [State + 3*Nb], eax
+	ret
+
 ;;--------------------------------------------------------------------------------
 
 ;; rax = return code to shell

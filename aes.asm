@@ -34,6 +34,9 @@ loopy:
 	; XXX
 
 	call statetoout
+	mov rax, output
+	call printary16
+	call newline
 
 	mov rax, 0
 	jmp exit
@@ -43,24 +46,29 @@ inptostate:
 inptostateloop2:
 	xor rdi, rdi		; col
 inptostateloop:
-	mov r9b, [input + rax + 4*rdi]
-	mov [State + rdi + 4*rax], r9b
+	mov r9b, [input + rax + Nb*rdi]
+	mov [State + rdi + Nb*rax], r9b
 	inc rdi
-	cmp rdi, 4
+	cmp rdi, Nb
 	jne inptostateloop
 	inc rax
-	cmp rax, 4
+	cmp rax, Nb
 	jne inptostateloop2
 	ret
 
-statetoout: 			;xxx: this is an incorrect placeholder
-	xor rax, rax
+statetoout:
+	xor rax, rax		; row
+statetooutloop2:
+	xor rdi, rdi		; col
 statetooutloop:
-	mov bl, [State + rax]
-	mov [State + rax], bl
-	inc rax
-	cmp rax, blocklen
+	mov r9b, [State + rax + Nb*rdi]
+	mov [output + rdi + Nb*rax], r9b
+	inc rdi
+	cmp rdi, Nb
 	jne statetooutloop
+	inc rax
+	cmp rax, Nb
+	jne statetooutloop2
 	ret
 	
 ;;--------------------------------------------------------------------------------

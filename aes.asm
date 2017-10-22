@@ -14,6 +14,7 @@ section .data
 	key times Nk dd 0
 	State times 4 * Nb db 0
 	w times Nb*(Nr + 1) dd 0 ; expanded key
+	temp dd 0		 ; temp space for key expansion
 
 ;; working space for mixcolumns / invmixcolumns
 	mixcolin times Nb db 0
@@ -468,7 +469,44 @@ invmixcolumn:
 ;;--------------------------------------------------------------------------------
 ;; FIPS 197 Section 5.2
 keyexpansion:
-	; xxx
+	xor rax, rax
+keyexpansionloop:
+	mov ebx, [key + rax] 	; XXX: little/big endian issues
+	mov [w + rax], ebx
+	add rax, 4
+	cmp rax, Nk
+	jne keyexpansionloop
+; rax = Nk here
+
+keyexpansionloop2:
+	mov ecx, [w + rax - 1]
+	mov [temp], ecx
+	mov rdx, rax		
+	and rdx, 0x3
+	cmp rdx, rax
+	jne keyexpansionelse 	; if rax mod Nk != 0
+	mov rdx, rax
+	mov rax, temp
+	call rotword
+	call subword
+	mov rax, rdx
+	mov ecx, [temp]
+	shl rdx, 2		; rdx = rax / Nk (Nk = 4)
+	xor ecx, [Rcon + rdx]
+	mov [temp], ecx
+	jmp keyexpansionendif
+
+keyexpansionelse:
+	; in AES-128, Nk is always 4, don't have to deal with this case separately.
+keyexpansionendif:
+	mov ebx, [w + rax - Nk]
+	xor ebx, [temp]
+	mov [w + rax], ebx
+
+	inc rax
+	cmp rax, Nb * (Nr + 1)
+	jne keyexpansionloop2
+
 	ret
 
 ;; rax points to input/output word

@@ -8,6 +8,8 @@ section .data
 	Nr equ 10
 	key times Nk dd 0
 	State times 4 * Nb db 0
+	mixcolin times Nb db 0
+	mixcolout times Nb db 0
 	
 	pbyte db 0
 
@@ -50,7 +52,7 @@ section .data
 ;;--------------------------------------------------------------------------------
 ;; Galois field GF(2^8) multiplication tables for MixColums
 ;; Multiply by 2:
-	gmul2 db 0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C
+	gmul2 db 0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E
 	db 0x20, 0x22, 0x24, 0x26, 0x28, 0x2A, 0x2C, 0x2E, 0x30, 0x32, 0x34, 0x36, 0x38, 0x3A, 0x3C, 0x3E
 	db 0x40, 0x42, 0x44, 0x46, 0x48, 0x4A, 0x4C, 0x4E, 0x50, 0x52, 0x54, 0x56, 0x58, 0x5A, 0x5C, 0x5E
 	db 0x60, 0x62, 0x64, 0x66, 0x68, 0x6A, 0x6C, 0x6E, 0x70, 0x72, 0x74, 0x76, 0x78, 0x7A, 0x7C, 0x7E
@@ -187,16 +189,30 @@ loopy:
 ;	call newline
 
 
+;	mov [pbyte], byte 'A'
+;	call printchar
+;	call shiftrows
+;	mov rax, State
+;	call printary16
+;	call newline
+
+;	mov [pbyte], byte 'B'
+;	call printchar
+;	call invshiftrows
+;	mov rax, State
+;	call printary16
+;	call newline
+
 	mov [pbyte], byte 'A'
 	call printchar
-	call shiftrows
+	call mixcolumns
 	mov rax, State
 	call printary16
 	call newline
 
 	mov [pbyte], byte 'B'
 	call printchar
-	call invshiftrows
+	call invmixcolumns
 	mov rax, State
 	call printary16
 	call newline
@@ -214,7 +230,6 @@ loopy:
 	jmp exit
 
 ;;--------------------------------------------------------------------------------
-
 ;; FIPS 197 Section 5.1.1
 subbytes:
 	xor rdi, rdi
@@ -227,7 +242,7 @@ subbytesloop:
 	jne subbytesloop
 	ret
 
-;; FIPS 197 Section 5.1.1
+;; FIPS 197 Section 5.3.2
 invsubbytes:
 	xor rdi, rdi
 invsubbytesloop:
@@ -240,7 +255,6 @@ invsubbytesloop:
 	ret
 	
 ;;--------------------------------------------------------------------------------
-
 ;; FIPS 197 Section 3.4
 inptostate:
 	xor rax, rax 		; row
@@ -274,7 +288,6 @@ statetooutloop:
 	ret
 	
 ;;--------------------------------------------------------------------------------
-
 ;; FIPS 197 Section 5.1.2
 shiftrows:
 	mov eax, [State + Nb]	; row 1
@@ -288,6 +301,7 @@ shiftrows:
 	mov [State + 3*Nb], eax
 	ret
 
+;; FIPS 197 Section 5.3.1
 invshiftrows:
 	mov eax, [State + Nb]	; row 1
 	ror eax, 8
@@ -301,7 +315,145 @@ invshiftrows:
 	ret
 
 ;;--------------------------------------------------------------------------------
+;; FIPS 197 Section 5.1.3
 
+mixcolumns:
+	xor rax, rax 		; column
+mixcolumnsloop2:
+	xor rbx, rbx		; row
+mixcolumnsloop:
+	mov cl, [State + 4*rax + rbx]
+	mov [mixcolin + rbx], cl
+	inc rbx
+	cmp rbx, Nb
+	jne mixcolumnsloop
+	call mixcolumn		; complete column in [mixcolin]
+
+	xor rbx, rbx		; copy computed column into state
+mixcolumnsloop3:
+	mov r8b, [mixcolout + rbx]
+	mov [State + 4*rax + rbx], r8b
+	inc rbx
+	cmp rbx, Nb
+	jne mixcolumnsloop3
+
+	inc rax
+	cmp rax, Nb
+	jne mixcolumnsloop2
+	ret
+
+mixcolumn:
+	mov r8b, [mixcolin]	; r8b = input term, r9b = accumulator
+	mov r9b, [gmul2 + r8]
+	mov r8b, [mixcolin + 1]
+	xor r9b, [gmul3 + r8]
+	mov r8b, [mixcolin + 2]
+	xor r9b, r8b
+	mov r8b, [mixcolin + 3]
+	xor r9b, r8b
+	mov [mixcolout], r9b
+
+	mov r9b, [mixcolin]
+	mov r8b, [mixcolin + 1]
+	xor r9b, [gmul2 + r8]
+	mov r8b, [mixcolin + 2]
+	xor r9b, [gmul3 + r8]
+	mov r8b, [mixcolin + 3]
+	xor r9b, r8b
+	mov [mixcolout + 1], r9b
+
+	mov r9b, [mixcolin]
+	mov r8b, [mixcolin + 1]
+	xor r9b, r8b
+	mov r8b, [mixcolin + 2]
+	xor r9b, [gmul2 + r8]
+	mov r8b, [mixcolin + 3]
+	xor r9b, [gmul3 + r8]
+	mov [mixcolout + 2], r9b
+
+	mov r8b, [mixcolin]
+	mov r9b, [gmul3 + r8]
+	mov r8b, [mixcolin + 1]
+	xor r9b, r8b
+	mov r8b, [mixcolin + 2]
+	xor r9b, r8b
+	mov r8b, [mixcolin + 3]
+	xor r9b, r8b
+	mov [mixcolout + 3], r9b
+
+	ret
+
+;; FIPS 197 Section 5.3.3
+
+invmixcolumns:
+	xor rax, rax		; column
+invmixcolumnsloop2:
+	xor rbx, rbx		; row
+invmixcolumnsloop:
+	mov cl, [State + 4*rax + rbx]
+	mov [mixcolin + rbx], cl
+	inc rbx
+	cmp rbx, Nb
+	jne invmixcolumnsloop
+	call invmixcolumn	; complete column in [mixcolin]
+
+	xor rbx, rbx		; copy computed column into state
+invmixcolumnsloop3:
+	mov r8b, [mixcolout + rbx]
+	mov [State + 4*rax + rbx], r8b
+	inc rbx
+	cmp rbx, Nb
+	jne invmixcolumnsloop3
+
+	inc rax
+	cmp rax, Nb
+	jne invmixcolumnsloop2
+	ret
+
+invmixcolumn:
+	mov r8b, [mixcolin]	; r8b = input term, r9b = accumulator
+	mov r9b, [gmul14 + r8]
+	mov r8b, [mixcolin + 1]
+	xor r9b, [gmul11 + r8]
+	mov r8b, [mixcolin + 2]
+	xor r9b, [gmul13 + r8]
+	mov r8b, [mixcolin + 3]
+	xor r9b, [gmul9 + r8]
+	mov [mixcolout], r9b
+	
+	mov r8b, [mixcolin]
+	mov r9b, [gmul9 + r8]
+	mov r8b, [mixcolin + 1]
+	xor r9b, [gmul14 + r8]
+	mov r8b, [mixcolin + 2]
+	xor r9b, [gmul11 + r8]
+	mov r8b, [mixcolin + 3]
+	xor r9b, [gmul13 + r8]
+	mov [mixcolout + 1], r9b
+
+	mov r8b, [mixcolin]
+	mov r9b, [gmul13 + r8]
+	mov r8b, [mixcolin + 1]
+	xor r9b, [gmul9 + r8]
+	mov r8b, [mixcolin + 2]
+	xor r9b, [gmul14 + r8]
+	mov r8b, [mixcolin + 3]
+	xor r9b, [gmul11 + r8]
+	mov [mixcolout + 2], r9b
+
+	mov r8b, [mixcolin]
+	mov r9b, [gmul11 + r8]
+	mov r8b, [mixcolin + 1]
+	xor r9b, [gmul13 + r8]
+	mov r8b, [mixcolin + 2]
+	xor r9b, [gmul9 + r8]
+	mov r8b, [mixcolin + 3]
+	xor r9b, [gmul14 + r8]
+	mov [mixcolout + 3], r9b
+
+	ret
+
+;;--------------------------------------------------------------------------------
 ;; rax = return code to shell
 exit:
 	mov rdi, rax

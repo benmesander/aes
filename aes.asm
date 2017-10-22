@@ -1,16 +1,24 @@
 section .data
+;; input data to encrypt and output encrypted data
 	blocklen equ 16
-	input times blocklen db 0
+	;	input times blocklen db 0
+	input db 0xd4, 0xbf, 0x5d, 0x30, 0xe0, 0xb4, 0x52, 0xae, 0xb8, 0x41, 0x11, 0xf1, 0x1e, 0x27, 0x98, 0xe5
 	output times blocklen db 0
 
+;; constants from FIPS 197
 	Nb equ 4
 	Nk equ 4
 	Nr equ 10
+
+;; variables from FIPS 197
 	key times Nk dd 0
 	State times 4 * Nb db 0
+
+;; working space for mixcolumns / invmixcolumns
 	mixcolin times Nb db 0
 	mixcolout times Nb db 0
 	
+;; working space for I/O
 	pbyte db 0
 
 ;;--------------------------------------------------------------------------------
@@ -158,12 +166,12 @@ section .text
 global _start
 
 _start:
-	xor r10,r10		; set input to 00 .. 0f for testing
-loopy:
-	mov [input + r10], r10
-	inc r10
-	cmp r10, blocklen
-	jne loopy
+;	xor r10,r10		; set input to 00 .. 0f for testing
+;loopy:
+;	mov [input + r10], r10
+;	inc r10
+;	cmp r10, blocklen
+;	jne loopy
 
 	call inptostate
 
@@ -178,18 +186,17 @@ loopy:
 	call printary16
 	call newline
 
-;	call subbytes
+;	call subbytes	; test subbytes
 ;	mov rax, State
 ;	call printary16
 ;	call newline
 
-;	call invsubbytes	; test subbytes/invsubbytes
+;	call invsubbytes
 ;	mov rax, State
 ;	call printary16
 ;	call newline
 
-
-;	mov [pbyte], byte 'A'
+;	mov [pbyte], byte 'A'	; test shiftrows
 ;	call printchar
 ;	call shiftrows
 ;	mov rax, State
@@ -203,7 +210,7 @@ loopy:
 ;	call printary16
 ;	call newline
 
-	mov [pbyte], byte 'A'
+	mov [pbyte], byte 'A' 	; test mixcolumns
 	call printchar
 	call mixcolumns
 	mov rax, State
@@ -322,7 +329,7 @@ mixcolumns:
 mixcolumnsloop2:
 	xor rbx, rbx		; row
 mixcolumnsloop:
-	mov cl, [State + 4*rax + rbx]
+	mov cl, [State + rax + 4*rbx]
 	mov [mixcolin + rbx], cl
 	inc rbx
 	cmp rbx, Nb
@@ -332,7 +339,7 @@ mixcolumnsloop:
 	xor rbx, rbx		; copy computed column into state
 mixcolumnsloop3:
 	mov r8b, [mixcolout + rbx]
-	mov [State + 4*rax + rbx], r8b
+	mov [State + rax + 4*rbx], r8b
 	inc rbx
 	cmp rbx, Nb
 	jne mixcolumnsloop3
@@ -378,7 +385,7 @@ mixcolumn:
 	mov r8b, [mixcolin + 2]
 	xor r9b, r8b
 	mov r8b, [mixcolin + 3]
-	xor r9b, r8b
+	xor r9b, [gmul2 + r8]
 	mov [mixcolout + 3], r9b
 
 	ret
@@ -390,7 +397,7 @@ invmixcolumns:
 invmixcolumnsloop2:
 	xor rbx, rbx		; row
 invmixcolumnsloop:
-	mov cl, [State + 4*rax + rbx]
+	mov cl, [State + rax + 4*rbx]
 	mov [mixcolin + rbx], cl
 	inc rbx
 	cmp rbx, Nb
@@ -400,7 +407,7 @@ invmixcolumnsloop:
 	xor rbx, rbx		; copy computed column into state
 invmixcolumnsloop3:
 	mov r8b, [mixcolout + rbx]
-	mov [State + 4*rax + rbx], r8b
+	mov [State + rax + 4*rbx], r8b
 	inc rbx
 	cmp rbx, Nb
 	jne invmixcolumnsloop3
@@ -467,12 +474,27 @@ printary16:
 	mov r12, rax
 	xor r10, r10
 
-printaryloop:
+printary16loop:
 	mov al, [r12 + r10]
 	call printhex
 	inc r10
 	cmp r10, blocklen
-	jne printaryloop
+	jne printary16loop
+	ret
+
+;; print a 4-byte array
+;; uses: all regs, [pbyte]
+;; rax - array to print
+printary4:
+	mov r12, rax
+	xor r10, r10
+
+printary4loop:
+	mov al, [r12 + r10]
+	call printhex
+	inc r10
+	cmp r10, Nb
+	jne printary4loop
 	ret
 
 ;; print a single byte in hex.

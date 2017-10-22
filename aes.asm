@@ -11,7 +11,8 @@ section .data
 	Nr equ 10
 
 ;; variables from FIPS 197
-	key times Nk dd 0
+	;	key times Nk dd 0
+	key db 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
 	State times 4 * Nb db 0
 	w times Nb*(Nr + 1) dd 0 ; expanded key
 	temp dd 0		 ; temp space for key expansion
@@ -179,18 +180,18 @@ _start:
 ;	cmp r10, blocklen
 ;	jne loopy
 
-	call inptostate
+;	call inptostate
 
-	mov [pbyte], byte 'I'
-	call printchar
-	mov rax, input
-	call printary16
-	call newline
-	mov [pbyte], byte 'S'
-	call printchar
-	mov rax, State
-	call printary16
-	call newline
+;	mov [pbyte], byte 'I'
+;	call printchar
+;	mov rax, input
+;	call printary16
+;	call newline
+;	mov [pbyte], byte 'S'
+;	call printchar
+;	mov rax, State
+;	call printary16
+;	call newline
 
 ;	call subbytes	; test subbytes
 ;	mov rax, State
@@ -216,27 +217,39 @@ _start:
 ;	call printary16
 ;	call newline
 
-	mov [pbyte], byte 'A' 	; test mixcolumns
-	call printchar
-	call mixcolumns
-	mov rax, State
-	call printary16
-	call newline
+;	mov [pbyte], byte 'A' 	; test mixcolumns
+;	call printchar
+;	call mixcolumns
+;	mov rax, State
+;	call printary16
+;	call newline
 
-	mov [pbyte], byte 'B'
-	call printchar
-	call invmixcolumns
-	mov rax, State
-	call printary16
-	call newline
+;	mov [pbyte], byte 'B'
+;	call printchar
+;	call invmixcolumns
+;	mov rax, State
+;	call printary16
+;	call newline
 
 	; XXX
 
-	mov [pbyte], byte 'O'
+;	mov [pbyte], byte 'O'
+;	call printchar
+;	call statetoout
+;	mov rax, output
+;	call printary16
+;	call newline
+
+	mov [pbyte], byte 'K'
 	call printchar
-	call statetoout
-	mov rax, output
+	mov rax, key
 	call printary16
+	call newline
+	call keyexpansion
+	mov [pbyte], byte 'E'
+	call printchar
+	mov rax, w
+	call printary16 	; xxx
 	call newline
 
 	mov rax, 0

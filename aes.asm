@@ -13,6 +13,7 @@ section .data
 ;; variables from FIPS 197
 	key times Nk dd 0
 	State times 4 * Nb db 0
+	w times Nb*(Nr + 1) dd 0 ; expanded key
 
 ;; working space for mixcolumns / invmixcolumns
 	mixcolin times Nb db 0
@@ -20,6 +21,10 @@ section .data
 	
 ;; working space for I/O
 	pbyte db 0
+
+;;--------------------------------------------------------------------------------
+;; Round constant word array - powers of x mod poly in GF(2^8)
+	Rcon dd 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000, 0x6C000000, 0xD8000000, 0xAB000000, 0x4D000000, 0x9A000000, 0x2F000000
 
 ;;--------------------------------------------------------------------------------
 ;; sbox and inverse sbox for AES
@@ -58,7 +63,7 @@ section .data
 	db 0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
 
 ;;--------------------------------------------------------------------------------
-;; Galois field GF(2^8) multiplication tables for MixColums
+;; Galois field GF(2^8) multiplication tables for mixcolumns/invmixcolumns
 ;; Multiply by 2:
 	gmul2 db 0x00, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E
 	db 0x20, 0x22, 0x24, 0x26, 0x28, 0x2A, 0x2C, 0x2E, 0x30, 0x32, 0x34, 0x36, 0x38, 0x3A, 0x3C, 0x3E
@@ -459,6 +464,55 @@ invmixcolumn:
 	mov [mixcolout + 3], r9b
 
 	ret
+
+;;--------------------------------------------------------------------------------
+;; FIPS 197 Section 5.2
+keyexpansion:
+	; xxx
+	ret
+
+;; rax points to input/output word
+;; uses r8, r9, r10
+subword:
+	xor r8, r8
+subwordloop:
+	mov r9b, [rax + r8]
+	mov r10b, [sbox + r9]
+	mov [rax + r8], r10b
+	inc r8
+	cmp r8, Nb
+	jne subwordloop
+	ret
+
+;; rax points to input/output word
+;; uses r8
+rotword:
+	mov r8d, [rax]
+	rol r8d, 8
+	mov [rax], r8d
+	ret
+
+;;--------------------------------------------------------------------------------
+;; FIPS 197 Section 5.1.4
+;; rax = ptr to round key
+addroundkey:
+	xor rbx, rbx 		; column
+addroundkeyloop2:
+	xor rcx, rcx		; row
+addroundkeyloop:
+	mov r8b, [State + rbx + 4*rcx]
+	mov r9, rax
+	add r9, rbx
+	xor r8b, [r9 + 4*rcx] ; XXX? check byte address of words in key schedule
+	mov [State + rbx + 4*rcx], r8b
+	inc rcx
+	cmp rcx, Nb
+	jne addroundkeyloop
+	inc rbx
+	cmp rbx, Nb
+	jne addroundkeyloop2
+	ret
+	
 
 ;;--------------------------------------------------------------------------------
 ;; rax = return code to shell

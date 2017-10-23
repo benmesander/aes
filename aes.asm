@@ -192,16 +192,19 @@ _start:
 ;	mov rax, State
 ;	call printary16
 ;	call newline
-
+;
 ;	call subbytes	; test subbytes
 ;	mov rax, State
 ;	call printary16
 ;	call newline
-
+;
 ;	call invsubbytes
 ;	mov rax, State
 ;	call printary16
 ;	call newline
+;
+;	mov rax, 0
+;	jmp exit
 
 ;	mov [pbyte], byte 'A'	; test shiftrows
 ;	call printchar
@@ -306,6 +309,11 @@ _start:
         mov rax, input
         call printary16
         call newline
+	mov [pbyte], byte 'S'
+        call printchar
+        mov rax, State
+        call printary16
+        call newline
 
 	mov [pbyte], byte 'K'
 	call printchar
@@ -319,10 +327,10 @@ _start:
 	
         mov r13, 1              ; round number
 cipherloop:
-        call subbytes           ; xxx: coredump
+        call subbytes
         call shiftrows
         call mixcolumns
-        mov rax, [w + 4*r13]    ; round key
+        lea rax, [w + 4*r13]    ; round key
         call addroundkey
 	inc r13
         cmp r13, Nr - 1
@@ -330,7 +338,7 @@ cipherloop:
 
 	call subbytes
         call shiftrows
-	mov rax, [w + 4*r13]    ; last round key
+	lea rax, [w + 4*r13]    ; last round key
         call addroundkey
 
 	call statetoout
@@ -346,6 +354,8 @@ cipherloop:
 ;;--------------------------------------------------------------------------------
 ;; FIPS 197 Section 5.1.1
 subbytes:
+	xor rax, rax
+        xor rcx, rcx
 	xor rdi, rdi
 subbytesloop:
 	mov al, [State + rdi]
@@ -358,6 +368,8 @@ subbytesloop:
 
 ;; FIPS 197 Section 5.3.2
 invsubbytes:
+	xor rax, rax
+        xor rcx, rcx
 	xor rdi, rdi
 invsubbytesloop:
 	mov al, [State + rdi]
@@ -371,6 +383,7 @@ invsubbytesloop:
 ;;--------------------------------------------------------------------------------
 ;; FIPS 197 Section 3.4
 inptostate:
+	xor r9, r9
 	xor rax, rax 		; row
 inptostateloop2:
 	xor rdi, rdi		; col
@@ -387,6 +400,7 @@ inptostateloop:
 
 ;; FIPS 197 Section 3.4
 statetoout:
+	xor r9, r9
 	xor rax, rax		; row
 statetooutloop2:
 	xor rdi, rdi		; col
@@ -457,6 +471,7 @@ mixcolumnsloop3:
 	ret
 
 mixcolumn:
+	xor r8, r8
 	mov r8b, [mixcolin]	; r8b = input term, r9b = accumulator
 	mov r9b, [gmul2 + r8]
 	mov r8b, [mixcolin + 1]
@@ -525,6 +540,7 @@ invmixcolumnsloop3:
 	ret
 
 invmixcolumn:
+	xor r8, r8
 	mov r8b, [mixcolin]	; r8b = input term, r9b = accumulator
 	mov r9b, [gmul14 + r8]
 	mov r8b, [mixcolin + 1]

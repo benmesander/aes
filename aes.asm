@@ -484,12 +484,25 @@ invmixcolumn:
 keyexpansion:
 	xor rax, rax
 keyexpansionloop:
-	mov ebx, [key + rax] 	; XXX: little/big endian issues
-	mov [w + rax], ebx
-	add rax, 4
+	mov cl, [key + 4*rax]
+	shl ecx, 8
+        mov bl, [key + 4*rax + 1]
+        or ecx, ebx
+        shl ecx, 8
+        mov bl, [key + 4*rax + 2]
+        or ecx, ebx
+	shl ecx, 8
+        mov bl, [key + 4*rax + 3]
+        or ecx, ebx
+	bswap ecx
+	mov [w + 4*rax], ecx
+        inc rax
 	cmp rax, Nk
 	jne keyexpansionloop
 ; rax = Nk here
+
+	ret
+
 
 keyexpansionloop2:
 	mov ecx, [w + rax - 1]

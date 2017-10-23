@@ -12,7 +12,7 @@ section .data
 
 ;; variables from FIPS 197
 	;	key times Nk dd 0
-	key db 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
+        key db 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
 	State times 4 * Nb db 0
 	w times Nb*(Nr + 1) dd 0 ; expanded key
 	temp dd 0		 ; temp space for key expansion
@@ -249,8 +249,59 @@ _start:
 	mov [pbyte], byte 'E'
 	call printchar
 	mov rax, w
-	call printary16 	; xxx
+	call printary16
 	call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+16
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+32
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+48
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+64
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+80
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+96
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+112
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+128
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+144
+        call printary16
+        call newline
+	mov [pbyte], byte 'Y'
+	call printchar
+        mov rax, w+160
+        call printary16
+        call newline
+
 
 	mov rax, 0
 	jmp exit
@@ -484,7 +535,7 @@ invmixcolumn:
 keyexpansion:
 	xor rax, rax
 keyexpansionloop:
-	mov cl, [key + 4*rax]
+	mov cl, [key + 4*rax]   ; xxx: this can be simplified with 32-bit ops and careful attention to endianness.
 	shl ecx, 8
         mov bl, [key + 4*rax + 1]
         or ecx, ebx
@@ -499,17 +550,16 @@ keyexpansionloop:
         inc rax
 	cmp rax, Nk
 	jne keyexpansionloop
-; rax = Nk here
-
-	ret
-
+;; rax = Nk here
 
 keyexpansionloop2:
-	mov ecx, [w + rax - 1]
-	mov [temp], ecx
+	mov rsi, rax
+        dec rsi
+	mov ecx, [w + 4*rsi]
+	mov [temp], ecx         ; xxx: endianness?
 	mov rdx, rax		
 	and rdx, 0x3
-	cmp rdx, rax
+	cmp rdx, 0
 	jne keyexpansionelse 	; if rax mod Nk != 0
 	mov rdx, rax
 	mov rax, temp
@@ -517,18 +567,20 @@ keyexpansionloop2:
 	call subword
 	mov rax, rdx
 	mov ecx, [temp]
-	shl rdx, 2		; rdx = rax / Nk (Nk = 4)
-	xor ecx, [Rcon + rdx]
+	shr rdx, 2		; rdx = rax / Nk (Nk = 4)
+	dec rdx
+	mov esi, [Rcon + 4*rdx]
+        bswap esi
+	xor ecx, esi
 	mov [temp], ecx
 	jmp keyexpansionendif
 
 keyexpansionelse:
 	; in AES-128, Nk is always 4, don't have to deal with this case separately.
 keyexpansionendif:
-	mov ebx, [w + rax - Nk]
+	mov ebx, [w + 4*rax - 4*Nk]
 	xor ebx, [temp]
-	mov [w + rax], ebx
-
+	mov [w + 4*rax], ebx
 	inc rax
 	cmp rax, Nb * (Nr + 1)
 	jne keyexpansionloop2
@@ -552,7 +604,7 @@ subwordloop:
 ;; uses r8
 rotword:
 	mov r8d, [rax]
-	rol r8d, 8
+	ror r8d, 8
 	mov [rax], r8d
 	ret
 

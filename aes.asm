@@ -314,23 +314,23 @@ _start:
         call newline
         call keyexpansion
 	
-	mov rax, 0              ; xxx
+	mov rax, w              ; first round key starts at w[0]
 	call addroundkey
 	
-        mov r13, 1
+        mov r13, 1              ; round number
 cipherloop:
-        call subbytes
+        call subbytes           ; xxx: coredump
         call shiftrows
         call mixcolumns
-        mov rax, 0              ; xxx
+        mov rax, [w + 4*r13]    ; round key
         call addroundkey
 	inc r13
         cmp r13, Nr - 1
         jne cipherloop
-        
+
 	call subbytes
         call shiftrows
-	mov rax, 0              ; xxx
+	mov rax, [w + 4*r13]    ; last round key
         call addroundkey
 
 	call statetoout

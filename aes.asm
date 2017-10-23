@@ -231,77 +231,114 @@ _start:
 ;	call printary16
 ;	call newline
 
-	; XXX
-
-;	mov [pbyte], byte 'O'
+;	mov [pbyte], byte 'O'   ; test output
 ;	call printchar
 ;	call statetoout
 ;	mov rax, output
 ;	call printary16
 ;	call newline
 
-	mov [pbyte], byte 'K'
-	call printchar
-	mov rax, key
-	call printary16
-	call newline
-	call keyexpansion
-	mov [pbyte], byte 'E'
-	call printchar
-	mov rax, w
-	call printary16
-	call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+16
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+32
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+48
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+64
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+80
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+96
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+112
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+128
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+144
-        call printary16
-        call newline
-	mov [pbyte], byte 'Y'
-	call printchar
-        mov rax, w+160
+;	mov [pbyte], byte 'K'   ; test key expansion
+;	call printchar
+;	mov rax, key
+;	call printary16
+;	call newline
+;	call keyexpansion
+;	mov [pbyte], byte 'E'
+;	call printchar
+;	mov rax, w
+;	call printary16
+;	call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+16
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+32
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+48
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+64
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+80
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+96
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+112
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+128
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+144
+;        call printary16
+;        call newline
+;	mov [pbyte], byte 'Y'
+;	call printchar
+;        mov rax, w+160
+;        call printary16
+;        call newline
+
+        call inptostate
+	mov [pbyte], byte 'I'
+        call printchar
+        mov rax, input
         call printary16
         call newline
 
+	mov [pbyte], byte 'K'
+	call printchar
+        mov rax, key
+        call printary16
+        call newline
+        call keyexpansion
+	
+	mov rax, 0              ; xxx
+	call addroundkey
+	
+        mov r13, 1
+cipherloop:
+        call subbytes
+        call shiftrows
+        call mixcolumns
+        mov rax, 0              ; xxx
+        call addroundkey
+	inc r13
+        cmp r13, Nr - 1
+        jne cipherloop
+        
+	call subbytes
+        call shiftrows
+	mov rax, 0              ; xxx
+        call addroundkey
+
+	call statetoout
+        mov [pbyte], byte 'O'
+	call printchar
+        mov rax, output
+        call printary16
+        call newline
 
 	mov rax, 0
 	jmp exit

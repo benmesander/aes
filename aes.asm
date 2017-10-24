@@ -332,7 +332,9 @@ cipherloop:
         call shiftrows
         call mixcolumns
 
-        lea rax, [w + 4*r13]    ; round key
+	mov r14, r13
+	shl r14, 4
+        lea rax, [w + r14]    ; round key xxx?
         call addroundkey
 
 	inc r13
@@ -341,7 +343,9 @@ cipherloop:
 
 	call subbytes
         call shiftrows
-	lea rax, [w + 4*r13]    ; last round key
+	mov r14, r13
+	shl r14, 4
+	lea rax, [w + r14]    ; last round key
         call addroundkey
 
 	call statetoout

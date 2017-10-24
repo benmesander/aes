@@ -174,12 +174,9 @@ section .text
 global _start
 
 _start:
-;	xor r10,r10		; set input to 00 .. 0f for testing
-;loopy:
-;	mov [input + r10], r10
-;	inc r10
-;	cmp r10, blocklen
-;	jne loopy
+
+;;----------------------------------------------------------------------
+;; unit tests
 
 ;	call inptostate
 
@@ -304,6 +301,9 @@ _start:
 ;        call printary16
 ;        call newline
 
+;;--------------------------------------------------------------------------------
+;; encryption algorithm starts here
+
         call inptostate
 	mov [pbyte], byte 'I'
         call printchar
@@ -325,14 +325,16 @@ _start:
 	
 	mov rax, w              ; first round key starts at w[0]
 	call addroundkey
-	
+
         mov r13, 1              ; round number
 cipherloop:
         call subbytes
         call shiftrows
         call mixcolumns
+
         lea rax, [w + 4*r13]    ; round key
         call addroundkey
+
 	inc r13
         cmp r13, Nr - 1
         jne cipherloop
@@ -420,26 +422,26 @@ statetooutloop:
 ;; FIPS 197 Section 5.1.2
 shiftrows:
 	mov eax, [State + Nb]	; row 1
-	rol eax, 8
+	ror eax, 8
 	mov [State + Nb], eax
 	mov eax, [State + 2*Nb]	; row 2
-	rol eax, 16
+	ror eax, 16
 	mov [State + 2*Nb], eax
 	mov eax, [State + 3*Nb]	; row 3
-	rol eax, 24
+	ror eax, 24
 	mov [State + 3*Nb], eax
 	ret
 
 ;; FIPS 197 Section 5.3.1
 invshiftrows:
 	mov eax, [State + Nb]	; row 1
-	ror eax, 8
+	rol eax, 8
 	mov [State + Nb], eax
 	mov eax, [State + 2*Nb] ; row 2
-	ror eax, 16
+	rol eax, 16
 	mov [State + 2*Nb], eax
 	mov eax, [State + 3*Nb]	; row 3
-	ror eax, 24
+	rol eax, 24
 	mov [State + 3*Nb], eax
 	ret
 

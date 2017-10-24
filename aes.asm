@@ -329,21 +329,22 @@ _start:
 
         mov r13, 1              ; round number
 cipherloop:
+
         call subbytes
         call shiftrows
         call mixcolumns
 
 	mov r14, r13
-	shl r14, 4
-        lea rax, [w + r14]    ; round key xxx?
+	shl r14, 4		; mul by 16
+        lea rax, [w + r14]      ; round key address advances by 16 bytes each time
         call addroundkey
 
 	inc r13
-        cmp r13, Nr - 1
+	cmp r13, Nr
         jne cipherloop
-
 	call subbytes
         call shiftrows
+
 	mov r14, r13
 	shl r14, 4
 	lea rax, [w + r14]    ; last round key

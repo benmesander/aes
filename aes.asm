@@ -610,7 +610,7 @@ keyexpansionloop2:
 	mov rsi, rax
         dec rsi
 	mov ecx, [w + 4*rsi]
-	mov [temp], ecx         ; xxx: endianness?
+	mov [temp], ecx
 	mov rdx, rax		
 	and rdx, 0x3
 	cmp rdx, 0
@@ -666,15 +666,15 @@ rotword:
 ;; FIPS 197 Section 5.1.4
 ;; rax = ptr to round key
 addroundkey:
-	xor rbx, rbx 		; column
+	xor rbx, rbx 		; row
 addroundkeyloop2:
-	xor rcx, rcx		; row
+	xor rcx, rcx		; column
 addroundkeyloop:
-	mov r8b, [State + rbx + 4*rcx]
+	mov r8b, [State + rcx + 4*rbx]
 	mov r9, rax
 	add r9, rbx
-	xor r8b, [r9 + 4*rcx] ; XXX? check byte address of words in key schedule
-	mov [State + rbx + 4*rcx], r8b
+	xor r8b, [r9 + 4*rcx]
+	mov [State + rcx + 4*rbx], r8b
 	inc rcx
 	cmp rcx, Nb
 	jne addroundkeyloop
@@ -682,7 +682,6 @@ addroundkeyloop:
 	cmp rbx, Nb
 	jne addroundkeyloop2
 	ret
-	
 
 ;;--------------------------------------------------------------------------------
 ;; rax = return code to shell

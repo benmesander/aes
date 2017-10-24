@@ -1,8 +1,6 @@
 section .data
 ;; input data to encrypt and output encrypted data
 	blocklen equ 16
-	;	input times blocklen db 0
-        ;	input db 0xd4, 0xbf, 0x5d, 0x30, 0xe0, 0xb4, 0x52, 0xae, 0xb8, 0x41, 0x11, 0xf1, 0x1e, 0x27, 0x98, 0xe5
         input db 0x32, 0x43, 0xF6, 0xA8, 0x88, 0x5A, 0x30, 0x8D, 0x31, 0x31, 0x98, 0xA2, 0xE0, 0x37, 0x07, 0x34
 	output times blocklen db 0
 
@@ -12,7 +10,6 @@ section .data
 	Nr equ 10
 
 ;; variables from FIPS 197
-	;	key times Nk dd 0
         key db 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
 	State times 4 * Nb db 0
 	w times Nb*(Nr + 1) dd 0 ; expanded key
@@ -305,6 +302,7 @@ _start:
 ;; encryption algorithm starts here
 
         call inptostate
+
 	mov [pbyte], byte 'I'	; print input block to encrypt
         call printchar
         mov rax, input
@@ -322,8 +320,8 @@ _start:
         mov rax, key
         call printary16
         call newline
+
         call keyexpansion
-	
 	mov rax, w              ; first round key starts at w[0]
 	call addroundkey
 
@@ -358,20 +356,11 @@ cipherloop:
         call newline
 
 ;;--------------------------------------------------------------------------------
+;; Decrypt output with inverse cipher
 
-	lea rax, [w + Nr * Nb * Nb]
-;	mov [pbyte], byte 'K'
-;        call printchar
-;	lea rax, [w + 160]
-;	lea rax, [w + Nr * Nb * Nb]
-;        call printary16
-;        call newline
-;	mov rax, 0
-;	jmp exit
-
+	lea rax, [w + Nr * Nb * Nb] ; start at end of extended key
 	call addroundkey
-
-	mov r13, Nr-1
+	mov r13, Nr-1		; round number
 
 invcipherloop:
 	call invshiftrows
@@ -383,7 +372,7 @@ invcipherloop:
 	call addroundkey
 	call invmixcolumns
 	dec r13
-	cmp r13, 1
+	cmp r13, 0
 	jne invcipherloop
 
 	call invshiftrows

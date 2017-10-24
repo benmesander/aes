@@ -357,6 +357,47 @@ cipherloop:
         call printary16
         call newline
 
+;;--------------------------------------------------------------------------------
+
+	lea rax, [w + Nr * Nb * Nb]
+;	mov [pbyte], byte 'K'
+;        call printchar
+;	lea rax, [w + 160]
+;	lea rax, [w + Nr * Nb * Nb]
+;        call printary16
+;        call newline
+;	mov rax, 0
+;	jmp exit
+
+	call addroundkey
+
+	mov r13, Nr-1
+
+invcipherloop:
+	call invshiftrows
+	call invsubbytes
+
+	mov r14, r13
+	shl r14, 4
+	lea rax, [w + r14]
+	call addroundkey
+	call invmixcolumns
+	dec r13
+	cmp r13, 1
+	jne invcipherloop
+
+	call invshiftrows
+	call invsubbytes
+	mov rax, w
+	call addroundkey
+	
+	call statetoout
+        mov [pbyte], byte 'O'	; print encrypted output
+	call printchar
+        mov rax, output
+        call printary16
+        call newline
+
 	mov rax, 0
 	jmp exit
 

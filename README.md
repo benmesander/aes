@@ -35,7 +35,7 @@ Notes on implementing AES in go: [http://blog.nindalf.com/implementing-aes/]
 X86_64 tutorial: [http://0xax.blogspot.com/2014/08/say-hello-to-x64-assembly-part-1.html]  
 NASM assembler reference: [http://www.nasm.us/xdoc/2.13.01/html/nasmdoc0.html]  
 GNU emacs NASM mode: [https://github.com/skeeto/nasm-mode]  
-Rocksoft CRC guide (best tutorial on polynomial arithmentic): [http://ross.net/crc/download/crc_v3.txt]
+Rocksoft CRC guide (best tutorial on polynomial arithmetic): [http://ross.net/crc/download/crc_v3.txt]
 
 In `~/.emacs`:  
 `(load "~/src/nasm-mode/nasm-mode.el")`  

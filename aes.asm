@@ -305,18 +305,19 @@ _start:
 ;; encryption algorithm starts here
 
         call inptostate
-	mov [pbyte], byte 'I'
+	mov [pbyte], byte 'I'	; print input block to encrypt
         call printchar
         mov rax, input
         call printary16
         call newline
-	mov [pbyte], byte 'S'
+
+	mov [pbyte], byte 'S'	; print state vector
         call printchar
         mov rax, State
         call printary16
         call newline
 
-	mov [pbyte], byte 'K'
+	mov [pbyte], byte 'K'	; print key
 	call printchar
         mov rax, key
         call printary16
@@ -349,7 +350,7 @@ cipherloop:
         call addroundkey
 
 	call statetoout
-        mov [pbyte], byte 'O'
+        mov [pbyte], byte 'O'	; print encrypted output
 	call printchar
         mov rax, output
         call printary16

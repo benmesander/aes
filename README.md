@@ -7,7 +7,7 @@ bit about crypto and X86_64 assembly. It is not particularly efficient
 as it is my first x86_64 program and I did not attempt to optimize the
 algorithm for the little-endian processor or use the long word length
 to my advantage. It also does not use SIMD or the AES-NI instructions
-available in the x86_64 as the point of the implmentation was to learn
+available in the x86_64 as the point of the implementation was to learn
 the details of the algorithm.
 
 AES-128 is a cipher that operates on 16-byte blocks. This
